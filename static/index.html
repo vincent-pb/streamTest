@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Text Streaming Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Real-time Text Streaming Demo</h1>
+        <p class="description">
+            This demo shows how to stream text from a Go backend to a JavaScript frontend in real-time.
+            Choose between Server-Sent Events (SSE) or WebSocket to see the difference.
+        </p>
+
+        <div class="demo-section">
+            <h2>🚀 AI Agent Demo (New!)</h2>
+            <p style="margin-bottom: 1rem; color: #666;">
+                <strong>Try the AI Agent with real OpenAI integration!</strong> Ask questions and get streaming responses from GPT-3.5 Turbo.
+            </p>
+            <div class="controls">
+                <a href="/ai" class="btn btn-primary" style="text-decoration: none; display: inline-block;">Try AI Agent Demo</a>
+            </div>
+            <div style="margin-top: 1rem; padding: 1rem; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                <strong>Note:</strong> You'll need to set your OpenAI API key to use the AI agent demo:<br>
+                <code>export OPENAI_API_KEY=your_api_key_here</code>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Server-Sent Events (SSE) Demo</h2>
+            <div class="controls">
+                <button id="startSSE" class="btn btn-primary">Start SSE Stream</button>
+                <button id="stopSSE" class="btn btn-secondary" disabled>Stop Stream</button>
+            </div>
+            <div class="output-container">
+                <div id="sseOutput" class="output"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>WebSocket Demo</h2>
+            <div class="controls">
+                <button id="startWS" class="btn btn-primary">Start WebSocket Stream</button>
+                <button id="stopWS" class="btn btn-secondary" disabled>Stop Stream</button>
+            </div>
+            <div class="output-container">
+                <div id="wsOutput" class="output"></div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>How it works:</h3>
+            <ul>
+                <li><strong>SSE (Server-Sent Events):</strong> One-way communication from server to client. Simpler to implement, works over HTTP.</li>
+                <li><strong>WebSocket:</strong> Bidirectional communication. More complex but allows real-time two-way communication.</li>
+                <li>Both methods allow the backend to send data as it becomes available, rather than waiting for the complete response.</li>
+                <li>This creates a much better user experience for long-running operations like AI text generation.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html> 

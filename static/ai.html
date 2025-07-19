@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Streaming Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .chat-messages {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .ai-message {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .ai-message.typing {
+            border-right: 2px solid #667eea;
+            animation: blink 1s infinite;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .question-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .send-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .protocol-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .protocol-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .protocol-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <a href="/" class="back-link">← Back to Demo</a>
+        
+        <h1>AI Agent Streaming Demo</h1>
+        <p class="description">
+            Ask questions to an AI agent and watch the responses stream in real-time using either Server-Sent Events (SSE), WebSocket, or traditional request-response with word-by-word display.
+        </p>
+        
+        <div class="protocol-selector">
+            <button class="protocol-btn active" onclick="switchProtocol('sse')">Server-Sent Events (SSE)</button>
+            <button class="protocol-btn" onclick="switchProtocol('websocket')">WebSocket</button>
+            <button class="protocol-btn" onclick="switchProtocol('nostream')">No Streaming</button>
+        </div>
+        
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">
+                Hello! I'm your AI assistant. Ask me anything and I'll respond with real-time streaming. Choose your preferred protocol above and start chatting!
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input 
+                type="text" 
+                id="questionInput" 
+                class="question-input" 
+                placeholder="Ask me anything..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button id="sendBtn" class="send-btn" onclick="sendQuestion()">Send</button>
+        </div>
+        
+        <div class="info-section">
+            <h3>How it works:</h3>
+            <ul>
+                <li><strong>Real AI Responses:</strong> Uses OpenAI's GPT-3.5 Turbo model for actual AI responses</li>
+                <li><strong>Three Protocols:</strong> 
+                    <ul>
+                        <li><strong>SSE:</strong> Real-time streaming from server to client</li>
+                        <li><strong>WebSocket:</strong> Bidirectional real-time communication</li>
+                        <li><strong>No Streaming:</strong> Complete response with word-by-word display effect</li>
+                    </ul>
+                </li>
+                <li><strong>Word-by-Word Display:</strong> All protocols show responses appearing word by word for better UX</li>
+                <li><strong>Error Handling:</strong> Graceful handling of connection issues and API errors</li>
+            </ul>
+            <p><strong>Note:</strong> You need to set your OpenAI API key to use this demo. Set the environment variable <code>OPENAI_API_KEY</code> before starting the server.</p>
+        </div>
+    </div>
+
+    <script src="/static/ai.js"></script>
+</body>
+</html> 

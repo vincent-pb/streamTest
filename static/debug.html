@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        #output { border: 1px solid #ccc; padding: 10px; min-height: 200px; background: #f9f9f9; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>SSE Debug Test</h1>
+    <button onclick="startSSE()">Start SSE Test</button>
+    <button onclick="stopSSE()">Stop SSE Test</button>
+    <button onclick="clearOutput()">Clear Output</button>
+    <div id="output"></div>
+
+    <script>
+        let eventSource = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        function startSSE() {
+            if (eventSource) {
+                log('SSE already running', 'error');
+                return;
+            }
+
+            log('Starting SSE connection...', 'success');
+            
+            try {
+                eventSource = new EventSource('/stream');
+                
+                eventSource.onopen = function(event) {
+                    log('SSE connection opened', 'success');
+                };
+                
+                eventSource.onmessage = function(event) {
+                    if (event.data === '[END]') {
+                        log('SSE stream ended', 'success');
+                        stopSSE();
+                        return;
+                    }
+                    log('Received: ' + event.data, 'success');
+                };
+                
+                eventSource.onerror = function(event) {
+                    log('SSE Error: ' + JSON.stringify(event), 'error');
+                    stopSSE();
+                };
+                
+            } catch (error) {
+                log('Failed to create SSE connection: ' + error.message, 'error');
+            }
+        }
+
+        function stopSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                log('SSE connection closed', 'info');
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', stopSSE);
+    </script>
+</body>
+</html> 
